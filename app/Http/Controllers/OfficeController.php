@@ -24,7 +24,7 @@ class OfficeController extends Controller
                     fn($builder) => $builder->whereRelation('reservations', 'user_id', '=', request('user_id')))
                     ->when(request('lat') && request('lng'), fn($builder) => $builder->nearestTo(request('lat'), request('lng')),
                     fn($builder) => $builder->orderBy('id', 'ASC'))
-                    ->with('images', 'tags', 'user')
+                    ->with(['images', 'tags', 'user'])
                     ->withCount(['reservations' => fn ($builder) => $builder->where('status', Reservation::STATUS_ACTIVE)])
                     ->paginate(20);
 
@@ -52,7 +52,10 @@ class OfficeController extends Controller
      */
     public function show(Office $office)
     {
-        //
+        $office->loadCount(['reservations' => fn ($builder) => $builder->where('status', Reservation::STATUS_ACTIVE)])
+        ->load(['images', 'tags', 'user']);
+
+        return OfficeResource::make($office);
     }
 
     /**
