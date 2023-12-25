@@ -17,7 +17,9 @@ class TagFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => 'has_ac',
+            'name' => 'has_private_bathroom',
+            'name' => 'has_coffee_machine',
         ];
     }
 }
