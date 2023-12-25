@@ -114,4 +114,22 @@ class OfficesControllerTest extends TestCase
         $this->assertEquals($user->id ,$response->json('data')[0]['user']['id']);
 
      }
+
+         /**
+     * @test
+     */
+
+     public function itReturnTheNumberOfReservation():void
+     {
+        $office = Office::factory()->create();
+
+        Reservation::factory()->for($office)->create(['status' => Reservation::STATUS_ACTIVE]);
+        Reservation::factory()->for($office)->create(['status' => Reservation::STATUS_CANCELLED]);
+
+        $response = $this->get('/api/offices');
+
+        $response->dump();
+        $response->assertOk();
+        $this->assertEquals(1, $response->json('data')[0]['reservations_count']);
+     }
 }
