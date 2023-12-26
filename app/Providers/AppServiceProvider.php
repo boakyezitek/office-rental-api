@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Office;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -21,5 +23,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Model::unguard();
+
+        Relation::enforceMorphMap([
+            'office' => Office::class,
+        ]);
     }
 }
