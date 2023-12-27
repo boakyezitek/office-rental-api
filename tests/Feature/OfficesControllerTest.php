@@ -9,7 +9,10 @@ use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
+
+use function PHPUnit\Framework\assertJson;
 
 class OfficesControllerTest extends TestCase
 {
@@ -173,8 +176,8 @@ class OfficesControllerTest extends TestCase
 
     public function itShowsTheOffice()
     {
-        $user = User::factory()->create();
-        $tag = Tag::factory()->create();
+        $user = User::factory()->createQuietly();
+        $tag = Tag::factory()->createQuietly();
         $office = Office::factory()->for($user)->create();
 
         $office->tags()->attach($tag);
@@ -195,6 +198,53 @@ class OfficesControllerTest extends TestCase
         $this->assertIsArray($response->json('data')['images']);
         $this->assertEquals($user->id ,$response->json('data')['user']['id']);
         $this->assertEquals(1, $response->json('data')['reservations_count']);
+    }
+
+    /**
+     * @test
+    */
+
+    public function itCreateAnOffice()
+    {
+        $user = User::factory()->create();
+
+        $tag1 = Tag::factory()->create();
+        $tag2= Tag::factory()->create();
+        $this->actingAs($user);
+        $response = $this->postJson('/api/offices', [
+            'title' => 'Office University Of Ghana',
+            'description' => 'Descriptoin',
+            'lat' => '5.655141285936562',
+            'lng' => '-0.18241469719923803',
+            'address_line1' => 'address',
+            'price_per_day' => 10_000,
+            'monthly_discount' => 5,
+            'tags' => [$tag1->id, $tag2->id],
+        ]);
+
+        $response->assertCreated()
+        ->assertJsonPath('data.title', 'Office University Of Ghana')
+        ->assertJsonPath('data.user.id', $user->id)
+        ->assertJsonPath('data.approval_status', Office::APPROVAL_PENDING)
+        ->assertJsonCount(2, 'data.tags');
+
+        $this->assertDatabaseHas('offices', [
+            'title' => 'Office University Of Ghana'
+        ]);
+    }
+
+    /**
+     * @test
+     */
+    public function itDoesntAllowCreatingIfScopeIsNotProvided()
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user, []);
+
+        $response = $this->postJson('/api/offices');
+
+        $response->assertForbidden();
     }
 
 }

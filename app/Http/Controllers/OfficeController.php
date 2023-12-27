@@ -8,6 +8,11 @@ use App\Http\Requests\UpdateOfficeRequest;
 use App\Http\Resources\OfficeResource;
 use App\Models\Reservation;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Response;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class OfficeController extends Controller
 {
@@ -32,19 +37,40 @@ class OfficeController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreOfficeRequest $request)
+    public function create():JsonResource
     {
-        //
+        $abort = abort_unless(auth()->user()->tokenCan('office.create'),
+            Response::HTTP_FORBIDDEN
+        );
+
+        dd($abort);
+        $attributes = validator(
+            request()->all(),
+            [
+                'title' => ['required', 'string'],
+                'description' => ['required', 'string'],
+                'lat' => ['required', 'numeric'],
+                'lng' => ['required', 'numeric'],
+                'address_line1' => ['required', 'string'],
+                'hidden' => ['bool'],
+                'price_per_day' => ['required', 'integer', 'min:100'],
+                'monthly_discount' => ['integer', 'min:0'],
+                'tags' => ['array'],
+                'tags.*' => ['integer', Rule::exists('tags', 'id')]
+            ]
+        )->validate();
+
+        $attributes['approval_status'] = Office::APPROVAL_PENDING;
+
+        $office = Auth::user()->offices()->create(
+            Arr::except($attributes, ['tags'])
+        );
+
+        $office->tags()->sync($attributes['tags']);
+
+        return OfficeResource::make($office);
     }
 
     /**
