@@ -12,6 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class OfficeController extends Controller
@@ -64,11 +65,17 @@ class OfficeController extends Controller
 
         $attributes['approval_status'] = Office::APPROVAL_PENDING;
 
-        $office = Auth::user()->offices()->create(
-            Arr::except($attributes, ['tags'])
-        );
 
-        $office->tags()->sync($attributes['tags']);
+
+        $office = DB::transaction(function () use ($attributes) {
+            $office = Auth::user()->offices()->create(
+                Arr::except($attributes, ['tags'])
+            );
+
+            $office->tags()->attach($attributes['tags']);
+            return $office;
+        });
+
 
         return OfficeResource::make($office);
     }
