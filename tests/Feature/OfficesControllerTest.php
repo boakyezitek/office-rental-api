@@ -7,9 +7,11 @@ use App\Models\Office;
 use App\Models\Reservation;
 use App\Models\Tag;
 use App\Models\User;
+use App\Notifications\OfficePendingApproval;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -301,12 +303,14 @@ class OfficesControllerTest extends TestCase
     {
         $admin = User::factory()->create(['is_admin' => true]);
 
+        Notification::fake();
+
         $user = User::factory()->create();
         $office = Office::factory()->for($user)->create();
 
         $this->actingAs($user);
 
-        $response = $this->putJson('/offices/'.$office->id, [
+        $response = $this->putJson('/api/offices/'.$office->id, [
             'lat' => 40.74051727562952
         ]);
 
@@ -317,6 +321,7 @@ class OfficesControllerTest extends TestCase
             'approval_status' => Office::APPROVAL_PENDING,
         ]);
 
+        Notification::assertSentTo($admin, OfficePendingApproval::class);
     }
 
 

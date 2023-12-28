@@ -7,13 +7,16 @@ use App\Http\Requests\StoreOfficeRequest;
 use App\Http\Requests\UpdateOfficeRequest;
 use App\Http\Resources\OfficeResource;
 use App\Models\Reservation;
+use App\Models\User;
 use App\Models\Validators\OfficeValidator;
+use App\Notifications\OfficePendingApproval;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 
 class OfficeController extends Controller
@@ -68,6 +71,8 @@ class OfficeController extends Controller
             return $office;
         });
 
+        Notification::send(User::where('is_admin', true)->get(), new OfficePendingApproval($office));
+        
         return OfficeResource::make($office->load('images', 'tags', 'user'));
     }
 
@@ -111,6 +116,9 @@ class OfficeController extends Controller
             }
         });
 
+        if ($requiresReview) {
+            Notification::send(User::where('is_admin', true)->get(), new OfficePendingApproval($office));
+        }
 
         return OfficeResource::make($office->load('images', 'tags', 'user'));
     }
