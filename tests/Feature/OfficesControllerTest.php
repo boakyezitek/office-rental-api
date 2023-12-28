@@ -242,7 +242,7 @@ class OfficesControllerTest extends TestCase
         $user = User::factory()->create();
 
         Sanctum::actingAs($user, []);
-
+-
         $response = $this->postJson('/api/offices');
 
         $response->assertForbidden();
@@ -293,6 +293,32 @@ class OfficesControllerTest extends TestCase
 
         $response->assertStatus(Response::HTTP_FORBIDDEN);
     }
+
+     /**
+     * @test
+     */
+    public function itMarksTheOfficeAsPendingIfDirty()
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $user = User::factory()->create();
+        $office = Office::factory()->for($user)->create();
+
+        $this->actingAs($user);
+
+        $response = $this->putJson('/offices/'.$office->id, [
+            'lat' => 40.74051727562952
+        ]);
+
+        $response->assertOk();
+
+        $this->assertDatabaseHas('offices', [
+            'id' => $office->id,
+            'approval_status' => Office::APPROVAL_PENDING,
+        ]);
+
+    }
+
 
 
 }
