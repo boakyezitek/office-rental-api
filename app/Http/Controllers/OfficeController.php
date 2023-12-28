@@ -93,7 +93,7 @@ class OfficeController extends Controller
             Response::HTTP_FORBIDDEN
         );
 
-        // $this->authorize('update', $office);
+        $this->authorize('update', $office);
 
         $attributes = (new OfficeValidator())->validate($office, request()->all());
 

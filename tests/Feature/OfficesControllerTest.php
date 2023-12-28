@@ -287,7 +287,7 @@ class OfficesControllerTest extends TestCase
 
         $this->actingAs($user);
 
-        $response = $this->putJson('/offices/'.$office->id, [
+        $response = $this->putJson('/api/offices/'.$office->id, [
             'title' => 'Amazing Office'
         ]);
 
