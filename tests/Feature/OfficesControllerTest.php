@@ -238,11 +238,11 @@ class OfficesControllerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        Sanctum::actingAs($user, []);
--
+        Sanctum::actingAs($user, ['office.create']);
+
         $response = $this->postJson('/api/offices');
 
-        $response->assertForbidden();
+        $this->assertNotEquals(Response::HTTP_FORBIDDEN, $response->status());
     }
 
 
