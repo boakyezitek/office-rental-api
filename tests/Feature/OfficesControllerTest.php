@@ -69,7 +69,7 @@ class OfficesControllerTest extends TestCase
 
         $this->actingAs($user);
 
-        $response = $this->get('/offices?user_id='.$user->id);
+        $response = $this->get('/api/offices?user_id='.$user->id);
 
         $response->assertOk()
             ->assertJsonCount(5, 'data');
