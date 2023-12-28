@@ -325,5 +325,41 @@ class OfficesControllerTest extends TestCase
     }
 
 
+    /**
+     * @test
+     */
+    public function itCanDeleteOffices()
+    {
 
+        $user = User::factory()->create();
+        $office = Office::factory()->for($user)->create();
+
+
+        $this->actingAs($user);
+
+        $response = $this->deleteJson('/api/offices/'.$office->id);
+
+        $response->assertOk();
+
+        $this->assertSoftDeleted($office);
+    }
+
+    /**
+     * @test
+     */
+    public function itCannotDeleteAnOfficeThatHasReservations()
+    {
+        $user = User::factory()->create();
+        $office = Office::factory()->for($user)->create();
+
+        Reservation::factory(3)->for($office)->create();
+
+        $this->actingAs($user);
+
+        $response = $this->deleteJson('/api/offices/'.$office->id);
+
+        $response->assertUnprocessable();
+
+        $this->assertNotSoftDeleted($office);
+    }
 }
