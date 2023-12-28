@@ -29,7 +29,6 @@ class OfficesControllerTest extends TestCase
         Office::factory(3)->create();
 
         $response = $this->get('/api/offices');
-        $response->dump();
         $response->assertOk();
         $response->assertJsonStructure(['data' => [['id']]]);
         $response->assertJsonCount(3,'data');
@@ -109,7 +108,6 @@ class OfficesControllerTest extends TestCase
         $office->images()->create(['path' => 'image.jpg']);
 
         $response = $this->get('/api/offices');
-        $response->dump();
 
         $response->assertOk();
 
@@ -134,7 +132,6 @@ class OfficesControllerTest extends TestCase
 
         $response = $this->get('/api/offices');
 
-        $response->dump();
         $response->assertOk();
         $this->assertEquals(1, $response->json('data')[0]['reservations_count']);
      }
@@ -161,7 +158,6 @@ class OfficesControllerTest extends TestCase
 
         $response = $this->get('/api/offices?lat=5.654730915610937&lng=-0.10684656193102442');
 
-        $response->dump();
         $response->assertOk();
         $this->assertEquals('University of Ghana', $response->json('data')[0]['title']);
         $this->assertEquals('Leiria', $response->json('data')[1]['title']);
@@ -191,7 +187,6 @@ class OfficesControllerTest extends TestCase
 
         $response = $this->get('/api/offices/'.$office->id);
 
-        $response->dump();
 
         $response->assertOk();
 
