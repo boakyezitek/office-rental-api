@@ -7,6 +7,7 @@ use App\Http\Requests\StoreOfficeRequest;
 use App\Http\Requests\UpdateOfficeRequest;
 use App\Http\Resources\OfficeResource;
 use App\Models\Reservation;
+use App\Models\Validators\OfficeValidator;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Response;
@@ -42,42 +43,32 @@ class OfficeController extends Controller
      */
     public function create():JsonResource
     {
-        $abort = abort_unless(auth()->user()->tokenCan('office.create'),
+        abort_unless(
+            auth()->user()->tokenCan('office.create'),
             Response::HTTP_FORBIDDEN
         );
 
-        dd($abort);
-        $attributes = validator(
-            request()->all(),
-            [
-                'title' => ['required', 'string'],
-                'description' => ['required', 'string'],
-                'lat' => ['required', 'numeric'],
-                'lng' => ['required', 'numeric'],
-                'address_line1' => ['required', 'string'],
-                'hidden' => ['bool'],
-                'price_per_day' => ['required', 'integer', 'min:100'],
-                'monthly_discount' => ['integer', 'min:0'],
-                'tags' => ['array'],
-                'tags.*' => ['integer', Rule::exists('tags', 'id')]
-            ]
-        )->validate();
+        $attributes = (new OfficeValidator())->validate(
+            $office = new Office(),
+            request()->all()
+        );
 
         $attributes['approval_status'] = Office::APPROVAL_PENDING;
+        $attributes['user_id'] = auth()->id();
 
-
-
-        $office = DB::transaction(function () use ($attributes) {
-            $office = Auth::user()->offices()->create(
+        $office = DB::transaction(function () use ($office, $attributes) {
+            $office->fill(
                 Arr::except($attributes, ['tags'])
-            );
+            )->save();
 
-            $office->tags()->attach($attributes['tags']);
+            if (isset($attributes['tags'])) {
+                $office->tags()->attach($attributes['tags']);
+            }
+
             return $office;
         });
 
-
-        return OfficeResource::make($office);
+        return OfficeResource::make($office->load('images', 'tags', 'user'));
     }
 
     /**
@@ -91,20 +82,33 @@ class OfficeController extends Controller
         return OfficeResource::make($office);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Office $office)
-    {
-        //
-    }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateOfficeRequest $request, Office $office)
+    public function update(Office $office):JsonResource
     {
-        //
+        abort_unless(
+            auth()->user()->tokenCan('office.update'),
+            Response::HTTP_FORBIDDEN
+        );
+
+        // $this->authorize('update', $office);
+
+        $attributes = (new OfficeValidator())->validate($office, request()->all());
+
+        DB::transaction(function () use ($office, $attributes) {
+            $office->update(
+                Arr::except($attributes, ['tags'])
+            );
+
+            if (isset($attributes['tags'])) {
+                $office->tags()->sync($attributes['tags']);
+            }
+        });
+
+
+        return OfficeResource::make($office->load('images', 'tags', 'user'));
     }
 
     /**
