@@ -27,3 +27,4 @@ Route::put('/offices/{office}', [OfficeController::class, 'update'])
 Route::delete('/offices/{office}', [OfficeController::class, 'destroy'])
     ->middleware(['auth:sanctum', 'verified']);
 Route::delete('/offices/{office}/images', [OfficeImageController::class, 'delete'])->middleware(['auth:sanctum', 'verified']);
+Route::delete('/offices/{office}/images/{image:id}', [OfficeImageController::class, 'delete'])->middleware(['auth:sanctum', 'verified']);

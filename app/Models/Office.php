@@ -87,6 +87,12 @@ class Office extends Model
         return $this->belongsToMany(Tag::class, 'offices_tags');
     }
 
+    public function featuredImage(): BelongsTo
+    {
+        return $this->belongsTo(Image::class, 'featured_image_id');
+    }
+
+
     public function scopeNearestTo(Builder $builder, $lat, $lng)
     {
         return $builder
