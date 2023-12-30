@@ -13,51 +13,41 @@ class Reservation extends Model
     const STATUS_ACTIVE = 1;
     const STATUS_CANCELLED = 2;
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * This property specifies the data types to which certain attributes
-     * should be cast when accessed or retrieved from the database. It helps
-     * in ensuring consistent data types for specific attributes.
-     *
-     * - 'price' is cast to an integer.
-     * - 'status' is cast to an integer.
-     * - 'start_date' and 'end_date' are cast to immutable date instances.
-     *
-     * @var array
-     */
     protected $casts = [
         'price' => 'integer',
         'status' => 'integer',
         'start_date' => 'immutable_date',
         'end_date' => 'immutable_date',
+        'wifi_password' => 'encrypted'
     ];
 
-    /**
-     * Define a relationship with the User model.
-     *
-     * This method establishes a "belongsTo" relationship, indicating that
-     * the current model instance belongs to a User. It returns the Eloquent
-     * relationship instance.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Define a relationship with the Office model.
-     *
-     * This method establishes a "belongsTo" relationship, indicating that
-     * the current model instance belongs to a User. It returns the Eloquent
-     * relationship instance.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
     public function office(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Office::class);
+    }
+
+    public function scopeActiveBetween($query, $from, $to)
+    {
+        $query->whereStatus(Reservation::STATUS_ACTIVE)
+            ->betweenDates($from, $to);
+    }
+
+    public function scopeBetweenDates($query, $from, $to)
+    {
+        $query->where(function ($query) use ($to, $from) {
+            $query
+                ->whereBetween('start_date', [$from, $to])
+                ->orWhereBetween('end_date', [$from, $to])
+                ->orWhere(function ($query) use ($to, $from) {
+                    $query
+                        ->where('start_date', '<', $from)
+                        ->where('end_date', '>', $to);
+                });
+        });
     }
 }

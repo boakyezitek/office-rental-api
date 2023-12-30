@@ -37,7 +37,7 @@ class UserReservationControllerTest extends TestCase
 
         $this->actingAs($user);
 
-        $response = $this->getJson('/reservations');
+        $response = $this->getJson('/api/reservations');
 
         $response
             ->assertJsonStructure(['data', 'meta', 'links'])
