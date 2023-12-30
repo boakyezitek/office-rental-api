@@ -31,7 +31,7 @@ class OfficeImageController extends Controller
             'path' => $path
         ]);
 
-        return ImageResource::make($image);
+        return ImageResource::make($image); 
     }
 
     public function delete(Office $office, Image $image)
