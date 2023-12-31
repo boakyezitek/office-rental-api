@@ -36,7 +36,7 @@ class UserReservationControllerTest extends TestCase
 
         Reservation::factory()->count(3)->create();
 
-        Sanctum::actingAs($user);
+        $this->actingAs($user);
 
         $response = $this->getJson('/api/reservations');
 
