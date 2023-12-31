@@ -12,6 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class UserReservationControllerTest extends TestCase
@@ -35,7 +36,7 @@ class UserReservationControllerTest extends TestCase
 
         Reservation::factory()->count(3)->create();
 
-        $this->actingAs($user);
+        Sanctum::actingAs($user);
 
         $response = $this->getJson('/api/reservations');
 
